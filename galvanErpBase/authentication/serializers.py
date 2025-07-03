@@ -112,7 +112,7 @@ class OTPVerificationSerializer(serializers.Serializer):
             user=user,
             verification_type=verification_type,
             is_verified=False
-        ).first()
+        ).order_by('-created_at').first()
 
         if not otp_record:
             raise serializers.ValidationError({"otp": "No active OTP found"})
@@ -159,7 +159,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'error': 'This account has been deactivated.'
             })
-
+        
         # Update last login
         user.save(update_fields=['last_login'])
         

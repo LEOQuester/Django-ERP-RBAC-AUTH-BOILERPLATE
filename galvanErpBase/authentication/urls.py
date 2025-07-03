@@ -9,7 +9,7 @@ from .views import (
     register_user, verify_otp, resend_otp, LoginView, LogoutView,
     CookieTokenRefreshView, ForgotPasswordView, ResetPasswordView,
     send_email_verification, send_phone_verification, get_verification_status,
-    UserUpdateDelete, AdminUserManage
+    UserUpdateDelete, AdminUserManage, UploadPictureView
 )
 
 urlpatterns = [
@@ -25,6 +25,9 @@ urlpatterns = [
     path('forgot-password/', views.ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/', views.ResetPasswordView.as_view(), name='reset-password'),
     path('verification-status/', views.get_verification_status, name='verification-status'),
+
+    #temp urls (disable in production)
+    path('picture-upload/', UploadPictureView.as_view(), name='picture_upload'),
 
     # New URLs for user management
     path('profile/', UserUpdateDelete.as_view(), name='user_profile'),

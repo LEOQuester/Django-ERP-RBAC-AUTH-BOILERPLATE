@@ -26,6 +26,7 @@ from .models import OTPVerification, User
 import random
 import string
 import logging
+import cloudinary.uploader
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +83,7 @@ def verify_otp(request):
 
         verification_type = serializer.validated_data['verification_type']
         otp = serializer.validated_data['otp']
-        otp_record = serializer.validated_data['otp_record']
-
+        otp_record = serializer.validated_data['otp_record'] 
         if otp_record.otp != otp:
             otp_record.attempts += 1
             user.otp_attempts += 1
@@ -91,7 +91,7 @@ def verify_otp(request):
             otp_record.save()
             user.save()
             
-            remaining_attempts = 6 - user.otp_attempts
+            remaining_attempts = 60 - user.otp_attempts
             if remaining_attempts > 0:
                 return Response({
                     'error': f'Invalid OTP. {remaining_attempts} attempts remaining.'
@@ -416,6 +416,7 @@ def send_phone_verification(request):
             otp=phone_otp,
             verification_type='PHONE'
         )
+        print(phone_otp)
         
         # Send OTP
         if send_phone_otp(user, phone_otp):
@@ -515,3 +516,21 @@ class AdminUserManage(APIView):
             return Response({"message": "Account successfully deleted"}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class UploadPictureView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Upload a picture to Cloudinary and return the link"""
+        file = request.FILES.get('file')
+        if not file:
+            logger.error("No file provided in the request.")
+            return Response({"error": "No file provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            upload_result = cloudinary.uploader.upload(file, folder="profile_pics")
+            print("this works upto here!")
+            return Response({"url": upload_result.get("secure_url")}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error uploading file to Cloudinary: {str(e)}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
